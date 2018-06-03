@@ -6,6 +6,7 @@
 
 int setexecfilecon(const char *filename, const char *fallback_type)
 {
+#if !defined(__ANDROID__)
 	char * mycon = NULL, *fcon = NULL, *newcon = NULL;
 	context_t con = NULL;
 	int rc = 0;
@@ -53,12 +54,17 @@ int setexecfilecon(const char *filename, const char *fallback_type)
 	freecon(fcon);
 	freecon(mycon);
 	return rc < 0 ? rc : 0;
+#else
+        return 0;
+#endif
+
 }
 
 #ifndef DISABLE_RPM
 int rpm_execcon(unsigned int verified __attribute__ ((unused)),
 		const char *filename, char *const argv[], char *const envp[])
 {
+#if !defined(__ANDROID__)
 	int rc;
 
 	rc = setexecfilecon(filename, "rpm_script_t");
@@ -66,5 +72,8 @@ int rpm_execcon(unsigned int verified __attribute__ ((unused)),
 		return rc;
 
 	return execve(filename, argv, envp);
+#else
+        return 0;
+#endif
 }
 #endif

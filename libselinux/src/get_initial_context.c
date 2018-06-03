@@ -25,7 +25,7 @@ int security_get_initial_context_raw(const char * name, char ** con)
 
 	snprintf(path, sizeof path, "%s%s%s", 
 		 selinux_mnt, SELINUX_INITCON_DIR, name);
-	fd = open(path, O_RDONLY | O_CLOEXEC);
+	fd = open(path, O_RDONLY);
 	if (fd < 0)
 		return -1;
 

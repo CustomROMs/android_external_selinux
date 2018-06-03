@@ -21,7 +21,7 @@ int security_deny_unknown(void)
 	}
 
 	snprintf(path, sizeof(path), "%s/deny_unknown", selinux_mnt);
-	fd = open(path, O_RDONLY | O_CLOEXEC);
+	fd = open(path, O_RDONLY);
 	if (fd < 0)
 		return -1;
 

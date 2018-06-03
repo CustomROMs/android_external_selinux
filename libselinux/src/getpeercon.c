@@ -15,12 +15,14 @@ int getpeercon_raw(int fd, char ** context)
 {
 	char *buf;
 	socklen_t size;
-	ssize_t ret;
+	ssize_t ret = 0;
 
 	size = INITCONTEXTLEN + 1;
 	buf = malloc(size);
 	if (!buf)
 		return -1;
+
+#if !defined(__ANDROID__)
 	memset(buf, 0, size);
 
 	ret = getsockopt(fd, SOL_SOCKET, SO_PEERSEC, buf, &size);
@@ -39,6 +41,9 @@ int getpeercon_raw(int fd, char ** context)
 	if (ret < 0)
 		free(buf);
 	else
+#else
+	memset(buf, 0xff, size);
+#endif
 		*context = buf;
 	return ret;
 }
@@ -52,10 +57,11 @@ int getpeercon(int fd, char ** context)
 
 	ret = getpeercon_raw(fd, &rcontext);
 
+#if !defined(__ANDROID__)
 	if (!ret) {
 		ret = selinux_raw_to_trans_context(rcontext, context);
 		freecon(rcontext);
 	}
-
+#endif
 	return ret;
 }

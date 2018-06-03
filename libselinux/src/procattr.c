@@ -22,8 +22,8 @@ static pthread_key_t destructor_key;
 static int destructor_key_initialized = 0;
 static __thread char destructor_initialized;
 
-#ifndef __BIONIC__
-/* Bionic declares this in unistd.h and has a definition for it */
+#ifndef __ANDROID__
+/* Android declares this in unistd.h and has a definition for it */
 static pid_t gettid(void)
 {
 	return syscall(__NR_gettid);
@@ -32,6 +32,7 @@ static pid_t gettid(void)
 
 static void procattr_thread_destructor(void __attribute__((unused)) *unused)
 {
+#if !defined(__ANDROID__)
 	if (prev_current != UNSET)
 		free(prev_current);
 	if (prev_exec != UNSET)
@@ -42,33 +43,41 @@ static void procattr_thread_destructor(void __attribute__((unused)) *unused)
 		free(prev_keycreate);
 	if (prev_sockcreate != UNSET)
 		free(prev_sockcreate);
+#endif
 }
 
 void __attribute__((destructor)) procattr_destructor(void);
 
 void hidden __attribute__((destructor)) procattr_destructor(void)
 {
+#if !defined(__ANDROID__)
 	if (destructor_key_initialized)
 		__selinux_key_delete(destructor_key);
+#endif
 }
 
 static inline void init_thread_destructor(void)
 {
+#if !defined(__ANDROID__)
 	if (destructor_initialized == 0) {
 		__selinux_setspecific(destructor_key, (void *)1);
 		destructor_initialized = 1;
 	}
+#endif
 }
 
 static void init_procattr(void)
 {
+#if !defined(__ANDROID__)
 	if (__selinux_key_create(&destructor_key, procattr_thread_destructor) == 0) {
 		destructor_key_initialized = 1;
 	}
+#endif
 }
 
 static int openattr(pid_t pid, const char *attr, int flags)
 {
+#if !defined(__ANDROID__)
 	int fd, rc;
 	char *path;
 	pid_t tid;
@@ -96,11 +105,15 @@ static int openattr(pid_t pid, const char *attr, int flags)
 out:
 	free(path);
 	return fd;
+#else
+	return 0;
+#endif
 }
 
 static int getprocattrcon_raw(char ** context,
 			      pid_t pid, const char *attr)
 {
+#if !defined(__ANDROID__)
 	char *buf;
 	size_t size;
 	int fd;
@@ -143,7 +156,7 @@ static int getprocattrcon_raw(char ** context,
 		return 0;
 	}
 
-	fd = openattr(pid, attr, O_RDONLY | O_CLOEXEC);
+	fd = openattr(pid, attr, O_RDONLY);
 	if (fd < 0)
 		return -1;
 
@@ -179,11 +192,15 @@ static int getprocattrcon_raw(char ** context,
 	close(fd);
 	errno = errno_hold;
 	return ret;
+#else
+        return 0;
+#endif
 }
 
 static int getprocattrcon(char ** context,
 			  pid_t pid, const char *attr)
 {
+#if !defined(__ANDROID__)
 	int ret;
 	char * rcontext;
 
@@ -195,11 +212,15 @@ static int getprocattrcon(char ** context,
 	}
 
 	return ret;
+#else
+        return 0;
+#endif
 }
 
 static int setprocattrcon_raw(const char * context,
 			      pid_t pid, const char *attr)
 {
+#if !defined(__ANDROID__)
 	int fd;
 	ssize_t ret;
 	int errno_hold;
@@ -235,7 +256,7 @@ static int setprocattrcon_raw(const char * context,
 	    && !strcmp(context, *prev_context))
 		return 0;
 
-	fd = openattr(pid, attr, O_RDWR | O_CLOEXEC);
+	fd = openattr(pid, attr, O_RDWR);
 	if (fd < 0)
 		return -1;
 	if (context) {
@@ -264,11 +285,15 @@ out:
 		*prev_context = context2;
 		return 0;
 	}
+#else
+        return 0;
+#endif
 }
 
 static int setprocattrcon(const char * context,
 			  pid_t pid, const char *attr)
 {
+#if !defined(__ANDROID__)
 	int ret;
 	char * rcontext;
 
@@ -280,6 +305,9 @@ static int setprocattrcon(const char * context,
 	freecon(rcontext);
 
 	return ret;
+#else
+        return 0;
+#endif
 }
 
 #define getselfattr_def(fn, attr) \

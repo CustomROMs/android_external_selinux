@@ -36,7 +36,7 @@ int is_selinux_mls_enabled(void)
 		return enabled;
 
 	snprintf(path, sizeof path, "%s/mls", selinux_mnt);
-	fd = open(path, O_RDONLY | O_CLOEXEC);
+	fd = open(path, O_RDONLY);
 	if (fd < 0)
 		return enabled;
 

@@ -20,7 +20,7 @@ int security_check_context_raw(const char * con)
 	}
 
 	snprintf(path, sizeof path, "%s/context", selinux_mnt);
-	fd = open(path, O_RDWR | O_CLOEXEC);
+	fd = open(path, O_RDWR);
 	if (fd < 0)
 		return -1;
 

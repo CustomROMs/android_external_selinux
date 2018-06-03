@@ -9,6 +9,7 @@
 
 int fsetfilecon_raw(int fd, const char * context)
 {
+#if !defined(__ANDROID__)
 	int rc = fsetxattr(fd, XATTR_NAME_SELINUX, context, strlen(context) + 1,
 			 0);
 	if (rc < 0 && errno == ENOTSUP) {
@@ -23,17 +24,22 @@ int fsetfilecon_raw(int fd, const char * context)
 		freecon(ccontext);
 	}
 	return rc;
+#else
+	return 0;
+#endif
 }
 
 hidden_def(fsetfilecon_raw)
 
 int fsetfilecon(int fd, const char *context)
 {
-	int ret;
+	int ret = 0;
 	char * rcontext;
 
+#if !defined(__ANDROID__)
 	if (selinux_trans_to_raw_context(context, &rcontext))
 		return -1;
+#endif
 
 	ret = fsetfilecon_raw(fd, rcontext);
 

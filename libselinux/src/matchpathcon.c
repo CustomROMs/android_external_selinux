@@ -31,14 +31,17 @@ int myprintf_compat = 0;
 
 void set_matchpathcon_printf(void (*f) (const char *fmt, ...))
 {
+#if !defined(__ANDROID__)
 	myprintf = f ? f : &default_printf;
 	myprintf_compat = 1;
+#endif
 }
 
 int compat_validate(struct selabel_handle *rec,
 		    struct selabel_lookup_rec *contexts,
 		    const char *path, unsigned lineno)
 {
+#if !defined(__ANDROID__)
 	int rc;
 	char **ctx = &contexts->ctx_raw;
 
@@ -61,6 +64,9 @@ int compat_validate(struct selabel_handle *rec,
 	}
 
 	return rc ? -1 : 0;
+#else
+	return 0;
+#endif
 }
 
 #ifndef BUILD_HOST
@@ -114,7 +120,9 @@ static void free_array_elts(void)
 
 void set_matchpathcon_invalidcon(int (*f) (const char *p, unsigned l, char *c))
 {
+#if !defined(__ANDROID__)
 	myinvalidcon = f;
+#endif
 }
 
 static int default_canoncon(const char *path, unsigned lineno, char **context)
@@ -137,10 +145,12 @@ static int default_canoncon(const char *path, unsigned lineno, char **context)
 
 void set_matchpathcon_canoncon(int (*f) (const char *p, unsigned l, char **c))
 {
+#if !defined(__ANDROID__)
 	if (f)
 		mycanoncon = f;
 	else
 		mycanoncon = &default_canoncon;
+#endif
 }
 
 static __thread struct selinux_opt options[SELABEL_NOPT];
@@ -148,6 +158,7 @@ static __thread int notrans;
 
 void set_matchpathcon_flags(unsigned int flags)
 {
+#if !defined(__ANDROID__)
 	int i;
 	memset(options, 0, sizeof(options));
 	i = SELABEL_OPT_BASEONLY;
@@ -157,6 +168,7 @@ void set_matchpathcon_flags(unsigned int flags)
 	options[i].type = i;
 	options[i].value = (flags & MATCHPATHCON_VALIDATE) ? (char*)1 : NULL;
 	notrans = flags & MATCHPATHCON_NOTRANS;
+#endif
 }
 
 /*
@@ -190,6 +202,7 @@ static file_spec_t *fl_head;
  */
 int matchpathcon_filespec_add(ino_t ino, int specind, const char *file)
 {
+#if !defined(__ANDROID__)
 	file_spec_t *prevfl, *fl;
 	int h, ret;
 	struct stat sb;
@@ -255,6 +268,9 @@ int matchpathcon_filespec_add(ino_t ino, int specind, const char *file)
 	myprintf("%s:  insufficient memory for file label entry for %s\n",
 		 __FUNCTION__, file);
 	return -1;
+#else
+	return 0;
+#endif
 }
 
 /*
@@ -262,6 +278,7 @@ int matchpathcon_filespec_add(ino_t ino, int specind, const char *file)
  */
 void matchpathcon_filespec_eval(void)
 {
+#if !defined(__ANDROID__)
 	file_spec_t *fl;
 	int h, used, nel, len, longest;
 
@@ -286,6 +303,7 @@ void matchpathcon_filespec_eval(void)
 	myprintf
 	    ("%s:  hash table stats: %d elements, %d/%d buckets used, longest chain length %d\n",
 	     __FUNCTION__, nel, used, HASH_BUCKETS, longest);
+#endif
 }
 
 /*
@@ -293,6 +311,7 @@ void matchpathcon_filespec_eval(void)
  */
 void matchpathcon_filespec_destroy(void)
 {
+#if !defined(__ANDROID__)
 	file_spec_t *fl, *tmp;
 	int h;
 
@@ -313,6 +332,7 @@ void matchpathcon_filespec_destroy(void)
 	}
 	free(fl_head);
 	fl_head = NULL;
+#endif
 }
 
 static void matchpathcon_thread_destructor(void __attribute__((unused)) *ptr)
@@ -324,8 +344,10 @@ void __attribute__((destructor)) matchpathcon_lib_destructor(void);
 
 void hidden __attribute__((destructor)) matchpathcon_lib_destructor(void)
 {
+#if !defined(__ANDROID__)
 	if (destructor_key_initialized)
 		__selinux_key_delete(destructor_key);
+#endif
 }
 
 static void matchpathcon_init_once(void)
@@ -336,6 +358,7 @@ static void matchpathcon_init_once(void)
 
 int matchpathcon_init_prefix(const char *path, const char *subset)
 {
+#if !defined(__ANDROID__)
 	if (!mycanoncon)
 		mycanoncon = default_canoncon;
 
@@ -349,23 +372,32 @@ int matchpathcon_init_prefix(const char *path, const char *subset)
 
 	hnd = selabel_open(SELABEL_CTX_FILE, options, SELABEL_NOPT);
 	return hnd ? 0 : -1;
+#else
+	return 0;
+#endif
 }
 
 hidden_def(matchpathcon_init_prefix)
 
 int matchpathcon_init(const char *path)
 {
+#if !defined(__ANDROID__)
 	return matchpathcon_init_prefix(path, NULL);
+#else
+	return 0;
+#endif
 }
 
 void matchpathcon_fini(void)
 {
+#if !defined(__ANDROID__)
 	free_array_elts();
 
 	if (hnd) {
 		selabel_close(hnd);
 		hnd = NULL;
 	}
+#endif
 }
 
 /*
@@ -376,6 +408,7 @@ void matchpathcon_fini(void)
  */
 int realpath_not_final(const char *name, char *resolved_path)
 {
+#if !defined(__ANDROID__)
 	char *last_component;
 	char *tmp_path, *p;
 	size_t len = 0;
@@ -426,10 +459,14 @@ int realpath_not_final(const char *name, char *resolved_path)
 out:
 	free(tmp_path);
 	return rc;
+#else
+	return 0;
+#endif
 }
 
 int matchpathcon(const char *path, mode_t mode, char ** con)
 {
+#if !defined(__ANDROID__)
 	char stackpath[PATH_MAX + 1];
 	char *p = NULL;
 	if (!hnd && (matchpathcon_init_prefix(NULL, NULL) < 0))
@@ -447,21 +484,29 @@ int matchpathcon(const char *path, mode_t mode, char ** con)
 	return notrans ?
 		selabel_lookup_raw(hnd, con, path, mode) :
 		selabel_lookup(hnd, con, path, mode);
+#else
+	return 0;
+#endif
 }
 
 int matchpathcon_index(const char *name, mode_t mode, char ** con)
 {
+#if !defined(__ANDROID__)
 	int i = matchpathcon(name, mode, con);
 
 	if (i < 0)
 		return -1;
 
 	return add_array_elt(*con);
+#endif
+	return 0;
 }
 
 void matchpathcon_checkmatches(char *str __attribute__((unused)))
 {
+#if !defined(__ANDROID__)
 	selabel_stats(hnd);
+#endif
 }
 
 /* Compare two contexts to see if their differences are "significant",
@@ -469,6 +514,7 @@ void matchpathcon_checkmatches(char *str __attribute__((unused)))
 int selinux_file_context_cmp(const char * a,
 			     const char * b)
 {
+#if !defined(__ANDROID__)
 	char *rest_a, *rest_b;	/* Rest of the context after the user */
 	if (!a && !b)
 		return 0;
@@ -485,10 +531,14 @@ int selinux_file_context_cmp(const char * a,
 	if (!rest_b)
 		return 1;
 	return strcmp(rest_a, rest_b);
+#else
+	return 0;
+#endif
 }
 
 int selinux_file_context_verify(const char *path, mode_t mode)
 {
+#if !defined(__ANDROID__)
 	char * con = NULL;
 	char * fcontext = NULL;
 	int rc = 0;
@@ -533,10 +583,14 @@ int selinux_file_context_verify(const char *path, mode_t mode)
 	freecon(con);
 	freecon(fcontext);
 	return rc;
+#else
+        return 0;
+#endif
 }
 
 int selinux_lsetfilecon_default(const char *path)
 {
+#if !defined(__ANDROID__)
 	struct stat st;
 	int rc = -1;
 	char * scontext = NULL;
@@ -556,6 +610,9 @@ int selinux_lsetfilecon_default(const char *path)
 		freecon(scontext);
 	}
 	return rc;
+#else
+        return 0;
+#endif
 }
 
 #endif
