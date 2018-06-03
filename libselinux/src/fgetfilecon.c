@@ -9,6 +9,7 @@
 
 int fgetfilecon_raw(int fd, char ** context)
 {
+#if !defined(__ANDROID__)
 	char *buf;
 	ssize_t size;
 	ssize_t ret;
@@ -47,12 +48,27 @@ int fgetfilecon_raw(int fd, char ** context)
 	else
 		*context = buf;
 	return ret;
+#else
+	char *buf;
+	ssize_t size;
+
+	size = INITCONTEXTLEN + 1;
+	buf = malloc(size);
+	if (!buf)
+		return -1;
+
+	memset(buf, 0xff, size);
+
+	*context = buf;
+	return 0;
+#endif
 }
 
 hidden_def(fgetfilecon_raw)
 
 int fgetfilecon(int fd, char ** context)
 {
+#if !defined(__ANDROID__)
 	char * rcontext = NULL;
 	int ret;
 
@@ -69,4 +85,14 @@ int fgetfilecon(int fd, char ** context)
 		return strlen(*context) + 1;
 
 	return ret;
+#else
+	char * rcontext = NULL;
+	int ret;
+
+	*context = NULL;
+
+	ret = fgetfilecon_raw(fd, &rcontext);
+
+	return ret;
+#endif
 }
