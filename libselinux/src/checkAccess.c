@@ -23,7 +23,7 @@ static int avc_reset_callback(uint32_t event __attribute__((unused)),
 
 static void avc_init_once(void)
 {
-	selinux_enabled = is_selinux_enabled();
+	selinux_enabled = is_selinux_enabled1();
 	if (selinux_enabled == 1) {
 		if (avc_open(NULL, 0))
 			return;
@@ -81,7 +81,7 @@ int selinux_check_passwd_access(access_vector_t requested)
 {
 	int status = -1;
 	char *user_context;
-	if (is_selinux_enabled() == 0)
+	if (is_selinux_enabled1() == 0)
 		return 0;
 	if (getprevcon_raw(&user_context) == 0) {
 		security_class_t passwd_class;

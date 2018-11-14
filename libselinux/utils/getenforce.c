@@ -8,9 +8,9 @@ int main(int argc __attribute__ ((unused)),
 {
 	int rc;
 
-	rc = is_selinux_enabled();
+	rc = is_selinux_enabled1();
 	if (rc < 0) {
-		fputs("getenforce:  is_selinux_enabled() failed", stderr);
+		fputs("getenforce:  is_selinux_enabled1() failed", stderr);
 		return 2;
 	}
 	if (rc == 1) {

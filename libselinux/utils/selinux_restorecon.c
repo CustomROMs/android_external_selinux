@@ -225,7 +225,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (require_selinux && (is_selinux_enabled() <= 0)) {
+	if (require_selinux && (is_selinux_enabled1() <= 0)) {
 		fprintf(stderr,
 		    "SELinux must be enabled to perform this operation.\n");
 		exit(-1);

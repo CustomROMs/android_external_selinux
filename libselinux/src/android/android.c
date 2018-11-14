@@ -926,7 +926,7 @@ int selinux_android_setfilecon(const char *pkgdir,
 	context_t ctx = NULL;
 	int rc = -1;
 
-	if (is_selinux_enabled() <= 0)
+	if (is_selinux_enabled1() <= 0)
 		return 0;
 
 	rc = getfilecon(pkgdir, &ctx_str);
@@ -996,7 +996,7 @@ int selinux_android_setcontext(uid_t uid,
 	context_t ctx = NULL;
 	int rc = -1;
 
-	if (is_selinux_enabled() <= 0)
+	if (is_selinux_enabled1() <= 0)
 		return 0;
 
 	rc = getcon(&ctx_str);

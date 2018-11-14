@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 		usage(argv[0], "invalid number of arguments", 2);
 
 	/* If selinux isn't available, bail out. */
-	if (!is_selinux_enabled()) {
+	if (!is_selinux_enabled1()) {
 		fprintf(stderr,
 			"getconlist may be used only on a SELinux kernel.\n");
 		return 1;

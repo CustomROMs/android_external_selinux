@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
 	int rc, i, commit = 0;
 
-	if (is_selinux_enabled() <= 0) {
+	if (is_selinux_enabled1() <= 0) {
 		fprintf(stderr, "%s:  SELinux is disabled\n", argv[0]);
 		return 1;
 	}
