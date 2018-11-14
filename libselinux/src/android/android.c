@@ -37,6 +37,9 @@ struct selabel_handle* selinux_android_service_open_context_handle(const struct 
 {
     struct selabel_handle* sehandle;
 
+    if (is_selinux_enabled() <= 0)
+        return NULL;
+
     sehandle = selabel_open(SELABEL_CTX_ANDROID_SERVICE,
             seopts_service, nopts);
 
@@ -56,6 +59,9 @@ struct selabel_handle* selinux_android_service_context_handle(void)
 {
     const struct selinux_opt* seopts_service;
 
+    if (is_selinux_enabled() <= 0)
+        return NULL;
+
     // Prefer files from /system & /vendor, fall back to files from /
     if (access(seopts_service_split[0].value, R_OK) != -1) {
         seopts_service = seopts_service_split;
@@ -74,6 +80,10 @@ struct selabel_handle* selinux_android_service_context_handle(void)
 struct selabel_handle* selinux_android_hw_service_context_handle(void)
 {
     const struct selinux_opt* seopts_service;
+
+    if (is_selinux_enabled() <= 0)
+        return NULL;
+
     if (access(seopts_hwservice_split[0].value, R_OK) != -1) {
         seopts_service = seopts_hwservice_split;
     } else {
@@ -86,6 +96,10 @@ struct selabel_handle* selinux_android_hw_service_context_handle(void)
 struct selabel_handle* selinux_android_vendor_service_context_handle(void)
 {
     const struct selinux_opt* seopts_service;
+
+    if (is_selinux_enabled() <= 0)
+        return NULL;
+
     if (access(seopts_vndservice.value, R_OK) != -1) {
         seopts_service = &seopts_vndservice;
     } else {
@@ -100,6 +114,9 @@ int selinux_log_callback(int type, const char *fmt, ...)
     va_list ap;
     int priority;
     char *strp;
+
+    if (is_selinux_enabled() <= 0)
+        return 0;
 
     switch(type) {
     case SELINUX_WARNING:

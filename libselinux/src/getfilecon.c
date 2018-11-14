@@ -11,14 +11,17 @@ int getfilecon_raw(const char *path, char ** context)
 {
 	char *buf;
 	ssize_t size;
-	ssize_t ret;
+	ssize_t ret = 0;
 
 	size = INITCONTEXTLEN + 1;
 	buf = malloc(size);
 	if (!buf)
 		return -1;
-	memset(buf, 0, size);
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 
+	memset(buf, 0, size);
 	ret = getxattr(path, XATTR_NAME_SELINUX, buf, size - 1);
 	if (ret < 0 && errno == ERANGE) {
 		char *newbuf;
@@ -46,6 +49,12 @@ int getfilecon_raw(const char *path, char ** context)
 		free(buf);
 	else
 		*context = buf;
+#if defined(__ANDROID__)
+} else {
+	memset(buf, 0xff, size);
+	*context = buf;
+}
+#endif
 	return ret;
 }
 
@@ -61,7 +70,10 @@ int getfilecon(const char *path, char ** context)
 	ret = getfilecon_raw(path, &rcontext);
 
 	if (ret > 0) {
-		ret = selinux_raw_to_trans_context(rcontext, context);
+#if defined(__ANDROID__)
+		if (is_selinux_enabled() > 0)
+#endif
+			ret = selinux_raw_to_trans_context(rcontext, context);
 		freecon(rcontext);
 	}
 	if (ret >= 0 && *context)

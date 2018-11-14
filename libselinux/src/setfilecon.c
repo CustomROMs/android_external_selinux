@@ -9,6 +9,10 @@
 
 int setfilecon_raw(const char *path, const char * context)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 	int rc = setxattr(path, XATTR_NAME_SELINUX, context, strlen(context) + 1,
 			0);
 	if (rc < 0 && errno == ENOTSUP) {
@@ -31,6 +35,11 @@ int setfilecon(const char *path, const char *context)
 {
 	int ret;
 	char * rcontext;
+
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 
 	if (selinux_trans_to_raw_context(context, &rcontext))
 		return -1;

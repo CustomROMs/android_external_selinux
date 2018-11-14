@@ -9,6 +9,9 @@
 
 int lsetfilecon_raw(const char *path, const char * context)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 	int rc = lsetxattr(path, XATTR_NAME_SELINUX, context, strlen(context) + 1,
 			 0);
 	if (rc < 0 && errno == ENOTSUP) {
@@ -23,12 +26,19 @@ int lsetfilecon_raw(const char *path, const char * context)
 		freecon(ccontext);
 	}
 	return rc;
+#if defined(__ANDROID__)
+	} else
+#endif
+	return 0;
 }
 
 hidden_def(lsetfilecon_raw)
 
 int lsetfilecon(const char *path, const char *context)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 	int ret;
 	char * rcontext;
 
@@ -40,4 +50,8 @@ int lsetfilecon(const char *path, const char *context)
 	freecon(rcontext);
 
 	return ret;
+#if defined(__ANDROID__)
+	} else
+#endif
+	return 0;
 }

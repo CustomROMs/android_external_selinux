@@ -227,10 +227,13 @@ static void selabel_digest_fini(struct selabel_digest *ptr)
 static inline int selabel_is_validate_set(const struct selinux_opt *opts,
 					  unsigned n)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0) return 0;
+#endif
+
 	while (n--)
 		if (opts[n].type == SELABEL_OPT_VALIDATE)
 			return !!opts[n].value;
-
 	return 0;
 }
 
@@ -238,6 +241,9 @@ int selabel_validate(struct selabel_handle *rec,
 		     struct selabel_lookup_rec *contexts)
 {
 	int rc = 0;
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0) return 0;
+#endif
 
 	if (!rec->validating || contexts->validated)
 		goto out;
@@ -357,6 +363,10 @@ struct selabel_handle *selabel_open(unsigned int backend,
 {
 	struct selabel_handle *rec = NULL;
 
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return rec;
+#endif
 	if (backend >= ARRAY_SIZE(initfuncs)) {
 		errno = EINVAL;
 		goto out;
@@ -390,6 +400,9 @@ out:
 int selabel_lookup(struct selabel_handle *rec, char **con,
 		   const char *key, int type)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 	struct selabel_lookup_rec *lr;
 
 	lr = selabel_lookup_common(rec, 1, key, type);
@@ -397,12 +410,18 @@ int selabel_lookup(struct selabel_handle *rec, char **con,
 		return -1;
 
 	*con = strdup(lr->ctx_trans);
+#if defined(__ANDROID__)
+	} else return 0;
+#endif
 	return *con ? 0 : -1;
 }
 
 int selabel_lookup_raw(struct selabel_handle *rec, char **con,
 		       const char *key, int type)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 	struct selabel_lookup_rec *lr;
 
 	lr = selabel_lookup_common(rec, 0, key, type);
@@ -410,6 +429,9 @@ int selabel_lookup_raw(struct selabel_handle *rec, char **con,
 		return -1;
 
 	*con = strdup(lr->ctx_raw);
+#if defined(__ANDROID__)
+	} else return 0;
+#endif
 	return *con ? 0 : -1;
 }
 
@@ -417,6 +439,11 @@ bool selabel_partial_match(struct selabel_handle *rec, const char *key)
 {
 	char *ptr;
 	bool ret;
+
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return true;
+#endif
 
 	if (!rec->func_partial_match) {
 		/*
@@ -442,6 +469,11 @@ int selabel_lookup_best_match(struct selabel_handle *rec, char **con,
 {
 	struct selabel_lookup_rec *lr;
 
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
+
 	if (!rec->func_lookup_best_match) {
 		errno = ENOTSUP;
 		return -1;
@@ -459,6 +491,11 @@ int selabel_lookup_best_match_raw(struct selabel_handle *rec, char **con,
 			      const char *key, const char **aliases, int type)
 {
 	struct selabel_lookup_rec *lr;
+
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 
 	if (!rec->func_lookup_best_match) {
 		errno = ENOTSUP;
@@ -486,6 +523,11 @@ int selabel_digest(struct selabel_handle *rec,
 				    unsigned char **digest, size_t *digest_len,
 				    char ***specfiles, size_t *num_specfiles)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
+
 	if (!rec->digest) {
 		errno = EINVAL;
 		return -1;
@@ -501,6 +543,12 @@ int selabel_digest(struct selabel_handle *rec,
 void selabel_close(struct selabel_handle *rec)
 {
 	size_t i;
+
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return;
+#endif
+
 	selabel_subs_fini(rec->subs);
 	selabel_subs_fini(rec->dist_subs);
 	if (rec->spec_files) {

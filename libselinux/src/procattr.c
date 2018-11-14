@@ -101,6 +101,9 @@ out:
 static int getprocattrcon_raw(char ** context,
 			      pid_t pid, const char *attr)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 	char *buf;
 	size_t size;
 	int fd;
@@ -179,11 +182,18 @@ static int getprocattrcon_raw(char ** context,
 	close(fd);
 	errno = errno_hold;
 	return ret;
+#if defined(__ANDROID__)
+	} else
+#endif
+	return 0;
 }
 
 static int getprocattrcon(char ** context,
 			  pid_t pid, const char *attr)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 	int ret;
 	char * rcontext;
 
@@ -195,6 +205,10 @@ static int getprocattrcon(char ** context,
 	}
 
 	return ret;
+#if defined(__ANDROID__)
+	} else
+#endif
+	return 0;
 }
 
 static int setprocattrcon_raw(const char * context,
@@ -269,6 +283,9 @@ out:
 static int setprocattrcon(const char * context,
 			  pid_t pid, const char *attr)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() > 0) {
+#endif
 	int ret;
 	char * rcontext;
 
@@ -280,6 +297,10 @@ static int setprocattrcon(const char * context,
 	freecon(rcontext);
 
 	return ret;
+#if defined(__ANDROID__)
+	} else
+#endif
+	return 0;
 }
 
 #define getselfattr_def(fn, attr) \
