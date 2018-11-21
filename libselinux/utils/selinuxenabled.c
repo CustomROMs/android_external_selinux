@@ -5,5 +5,5 @@
 
 int main(void)
 {
-	return !is_selinux_enabled1();
+	return !is_selinux_enabled();
 }

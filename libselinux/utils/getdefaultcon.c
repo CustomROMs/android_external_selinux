@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 		usage(argv[0], "invalid number of arguments", 2);
 
 	/* If selinux isn't available, bail out. */
-	if (!is_selinux_enabled1()) {
+	if (!is_selinux_enabled()) {
 		fprintf(stderr,
 			"%s may be used only on a SELinux kernel.\n", argv[0]);
 		return 1;

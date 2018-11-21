@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 		case 'a':
 			if (argc > 2)
 				usage(argv[0]);
-			if (is_selinux_enabled1() <= 0) {
+			if (is_selinux_enabled() <= 0) {
 				fprintf(stderr, "%s:  SELinux is disabled\n",
 					argv[0]);
 				return 1;
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (is_selinux_enabled1() <= 0) {
+	if (is_selinux_enabled() <= 0) {
 		fprintf(stderr, "%s:  SELinux is disabled\n", argv[0]);
 		return 1;
 	}

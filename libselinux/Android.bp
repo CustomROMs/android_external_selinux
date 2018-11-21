@@ -111,7 +111,6 @@ cc_library {
             shared_libs: [
                 "libcrypto",
                 "liblog",
-                "libcutils",
             ],
             static: {
                 whole_static_libs: ["libpackagelistparser"],
@@ -227,7 +226,6 @@ cc_library {
             shared_libs: [
                 "libcrypto",
                 "liblog",
-                "libcutils",
             ],
             static: {
                 whole_static_libs: ["libpackagelistparser"],

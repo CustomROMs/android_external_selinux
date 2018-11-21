@@ -8,19 +8,11 @@
 #include <stdio.h>
 #include "policy.h"
 
-#if defined(__ANDROID__)
-#include <cutils/properties.h>
-#endif
-
 int is_selinux_enabled(void)
 {
 	/* init_selinuxmnt() gets called before this function. We
  	 * will assume that if a selinux file system is mounted, then
  	 * selinux is enabled. */
-#if defined(__ANDROID__)
-       return property_get_bool("sys.selinux_enabled", false);
-#endif
-
 #ifdef ANDROID
 	return (selinux_mnt ? 1 : 0);
 #else
@@ -28,22 +20,7 @@ int is_selinux_enabled(void)
 #endif
 }
 
-int is_selinux_enabled1(void)
-{
-#if defined(__ANDROID__)
-       // inversed logic: if we enable spoofing property,
-       // we don't actually want SELinux to be enabled
-       return !property_get_bool("sys.selinux_enabled", false);
-#endif
-
-#ifdef ANDROID
-	return (selinux_mnt ? 1 : 0);
-#else
-	return (selinux_mnt && has_selinux_config);
-#endif
-}
-
-hidden_def(is_selinux_enabled1)
+hidden_def(is_selinux_enabled)
 
 /*
  * Function: is_selinux_mls_enabled()

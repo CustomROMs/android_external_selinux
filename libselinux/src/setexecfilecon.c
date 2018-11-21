@@ -11,7 +11,7 @@ int setexecfilecon(const char *filename, const char *fallback_type)
 	context_t con = NULL;
 	int rc = 0;
 
-	if (is_selinux_enabled1() < 1)
+	if (is_selinux_enabled() < 1)
 		return 0;
 
 	rc = getcon(&mycon);
