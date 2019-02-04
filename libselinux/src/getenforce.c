@@ -9,19 +9,11 @@
 #include <stdio.h>
 #include <limits.h>
 
-#if defined(__ANDROID__)
-#include <cutils/properties.h>
-#endif
-
 int security_getenforce(void)
 {
 	int fd, ret, enforce = 0;
 	char path[PATH_MAX];
 	char buf[20];
-
-#if defined(__ANDROID__)
-	return property_get_bool("sys.selinux_enforcing", false);
-#endif
 
 	if (!selinux_mnt) {
 		errno = ENOENT;

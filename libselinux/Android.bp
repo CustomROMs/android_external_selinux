@@ -73,7 +73,6 @@ cc_defaults {
             shared_libs: [
                 "libcrypto",
                 "liblog",
-                "libcutils",
             ],
 
             local_include_dirs: [ "src" ],
